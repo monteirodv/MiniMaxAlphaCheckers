@@ -1,767 +1,1203 @@
-<html><head><base href="https://classicgames.checkers/play-vs-cpu"><title>Damas Clássico - Jogue contra IA Avançada - Um projeto por Daniel M demonstrando conceitos de Minimax com alpha-beta pruning e heuristica</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+<html>
+  <head>
+    <base href="https://classicgames.checkers/play-vs-cpu">
+    <title>
+      <!-- Título do jogo: Damas Clássico - Jogue contra IA Avançada - Um projeto por Daniel M demonstrando conceitos de Minimax com alpha-beta pruning e heuristica --> Damas Clássico - Jogue contra IA Avançada - Um projeto por Daniel M demonstrando conceitos de Minimax com alpha-beta pruning e heuristica
+    </title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
 
-  body {
-    font-family: 'Roboto', sans-serif;
-    background: #f0f4f8;
-    color: #333;
-    line-height: 1.6;
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden;
-  }
+      /* Importando a fonte Roboto do Google Fonts */
+      body {
+        font-family: 'Roboto', sans-serif;
+        /* Definindo a fonte do corpo do documento como Roboto */
+        background: #f0f4f8;
+        /* Definindo a cor de fundo do corpo do documento */
+        color: #333;
+        /* Definindo a cor do texto do corpo do documento */
+        line-height: 1.6;
+        /* Definindo a altura da linha do corpo do documento */
+        margin: 0;
+        /* Removendo a margem do corpo do documento */
+        padding: 0;
+        /* Removendo o preenchimento do corpo do documento */
+        overflow-x: hidden;
+        /* Ocultando qualquer conteúdo que exceda a largura do corpo do documento */
+      }
 
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-  }
+      .container {
+        max-width: 1200px;
+        /* Definindo a largura máxima do contêiner */
+        margin: 0 auto;
+        /* Centralizando o contêiner na página */
+        padding: 20px;
+        /* Adicionando preenchimento ao contêiner */
+      }
 
-  h1, h2 {
-    text-align: center;
-    color: #2c3e50;
-  }
+      h1,
+      h2 {
+        text-align: center;
+        /* Centralizando o texto dos títulos h1 e h2 */
+        color: #2c3e50;
+        /* Definindo a cor do texto dos títulos h1 e h2 */
+      }
 
-  .game-area {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    flex-wrap: nowrap;
-  }
+      .game-area {
+        display: flex;
+        /* Definindo o layout do contêiner de jogo como flexível */
+        justify-content: space-between;
+        /* Distribuindo o conteúdo do contêiner de jogo uniformemente */
+        align-items: flex-start;
+        /* Alinhando os itens do contêiner de jogo no início */
+        flex-wrap: nowrap;
+        /* Impedindo que os itens do contêiner de jogo quebrem linha */
+      }
 
-  .board-container {
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    margin-bottom: 20px;
-    flex: 0 0 auto;
-    position: sticky;
-    top: 20px;
-  }
+      .board-container {
+        background: #fff;
+        /* Definindo a cor de fundo do contêiner do tabuleiro */
+        border-radius: 8px;
+        /* Adicionando bordas arredondadas ao contêiner do tabuleiro */
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        /* Adicionando sombra ao contêiner do tabuleiro */
+        padding: 20px;
+        /* Adicionando preenchimento ao contêiner do tabuleiro */
+        margin-bottom: 20px;
+        /* Adicionando margem inferior ao contêiner do tabuleiro */
+        flex: 0 0 auto;
+        /* Definindo o tamanho do contêiner do tabuleiro como automático */
+        position: sticky;
+        /* Fixando o contêiner do tabuleiro na posição */
+        top: 20px;
+        /* Definindo a posição do contêiner do tabuleiro em relação ao topo */
+      }
 
-  .board {
-    width: 400px;
-    height: 400px;
-    background: #deb887;
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    border: 2px solid #8b4513;
-    border-radius: 4px;
-    overflow: hidden;
-  }
+      .board {
+        width: 400px;
+        /* Definindo a largura do tabuleiro */
+        height: 400px;
+        /* Definindo a altura do tabuleiro */
+        background: #deb887;
+        /* Definindo a cor de fundo do tabuleiro */
+        display: grid;
+        /* Definindo o layout do tabuleiro como grade */
+        grid-template-columns: repeat(8, 1fr);
+        /* Definindo o número de colunas da grade como 8 */
+        border: 2px solid #8b4513;
+        /* Adicionando borda ao tabuleiro */
+        border-radius: 4px;
+        /* Adicionando bordas arredondadas ao tabuleiro */
+        overflow: hidden;
+        /* Ocultando qualquer conteúdo que exceda o tamanho do tabuleiro */
+      }
 
-  .square {
-    width: 50px;
-    height: 50px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
+      .square {
+        width: 50px;
+        /* Definindo a largura dos quadrados */
+        height: 50px;
+        /* Definindo a altura dos quadrados */
+        display: flex;
+        /* Definindo o layout dos quadrados como flexível */
+        justify-content: center;
+        /* Centralizando o conteúdo dos quadrados horizontalmente */
+        align-items: center;
+        /* Centralizando o conteúdo dos quadrados verticalmente */
+      }
 
-  .black {
-    background: #8b4513;
-  }
+      .black {
+        background: #8b4513;
+        /* Definindo a cor de fundo dos quadrados pretos */
+      }
 
-  .piece {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    cursor: pointer;
-    transition: transform 0.3s, box-shadow 0.3s;
-  }
+      .piece {
+        width: 40px;
+        /* Definindo a largura das peças */
+        height: 40px;
+        /* Definindo a altura das peças */
+        border-radius: 50%;
+        /* Adicionando bordas arredondadas às peças */
+        cursor: pointer;
+        /* Definindo o cursor como ponteiro ao passar o mouse sobre as peças */
+        transition: transform 0.3s, box-shadow 0.3s;
+        /* Adicionando efeito de transição às peças */
+      }
 
-  .piece:hover {
-    transform: scale(1.1);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  }
+      .piece:hover {
+        transform: scale(1.1);
+        /* Aumentando o tamanho das peças ao passar o mouse sobre elas */
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        /* Adicionando sombra às peças ao passar o mouse sobre elas */
+      }
 
-  .red {
-    background: linear-gradient(135deg, #ff4136, #85144b);
-  }
+      .red {
+        background: linear-gradient(135deg, #ff4136, #85144b);
+        /* Definindo a cor de fundo das peças vermelhas com um gradiente linear */
+      }
 
-  .white {
-    background: linear-gradient(135deg, #ffffff, #dddddd);
-  }
+      .white {
+        background: linear-gradient(135deg, #ffffff, #dddddd);
+        /* Definindo a cor de fundo das peças brancas com um gradiente linear */
+      }
 
-  .king::after {
-    content: '♔';
-    font-size: 30px;
-    position: relative;
-    top: -5px;
-    color: #ffd700;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  }
+      .king::after {
+        content: '♔';
+        /* Adicionando um símbolo de rei às peças coroadas */
+        font-size: 30px;
+        /* Definindo o tamanho da fonte do símbolo de rei */
+        position: relative;
+        /* Definindo a posição do símbolo de rei como relativa */
+        top: -5px;
+        /* Movendo o símbolo de rei para cima em relação à peça */
+        color: #ffd700;
+        /* Definindo a cor do símbolo de rei */
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        /* Adicionando sombra ao símbolo de rei */
+      }
 
-  #controls {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-  }
+      #controls {
+        display: flex;
+        /* Definindo o layout dos controles como flexível */
+        justify-content: center;
+        /* Centralizando os controles horizontalmente */
+        margin-top: 20px;
+        /* Adicionando margem superior aos controles */
+      }
 
-  button {
-    font-size: 16px;
-    padding: 10px 20px;
-    margin: 0 10px;
-    background-color: #3498db;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
+      button {
+        font-size: 16px;
+        /* Definindo o tamanho da fonte dos botões */
+        padding: 10px 20px;
+        /* Adicionando preenchimento aos botões */
+        margin: 0 10px;
+        /* Adicionando margem lateral aos botões */
+        background-color: #3498db;
+        /* Definindo a cor de fundo dos botões */
+        color: #fff;
+        /* Definindo a cor do texto dos botões */
+        border: none;
+        /* Removendo a borda dos botões */
+        border-radius: 4px;
+        /* Adicionando bordas arredondadas aos botões */
+        cursor: pointer;
+        /* Definindo o cursor como ponteiro ao passar o mouse sobre os botões */
+        transition: background-color 0.3s;
+        /* Adicionando efeito de transição aos botões */
+      }
 
-  button:hover {
-    background-color: #2980b9;
-  }
+      button:hover {
+        background-color: #2980b9;
+        /* Alterando a cor de fundo dos botões ao passar o mouse sobre eles */
+      }
 
-  #message {
-    text-align: center;
-    font-size: 18px;
-    margin-top: 10px;
-    padding: 10px;
-    background-color: #ecf0f1;
-    border-radius: 4px;
-  }
+      #message {
+        text-align: center;
+        /* Centralizando o texto da mensagem */
+        font-size: 18px;
+        /* Definindo o tamanho da fonte da mensagem */
+        margin-top: 10px;
+        /* Adicionando margem superior à mensagem */
+        padding: 10px;
+        /* Adicionando preenchimento à mensagem */
+        background-color: #ecf0f1;
+        /* Definindo a cor de fundo da mensagem */
+        border-radius: 4px;
+        /* Adicionando bordas arredondadas à mensagem */
+      }
 
-  .ai-container {
-    flex: 0 0 400px;
-    margin-left: 40px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    position: sticky;
-    top: 20px;
-    max-height: calc(100vh - 40px);
-    overflow-y: auto;
-  }
+      .ai-container {
+        flex: 0 0 400px;
+        /* Definindo o tamanho do contêiner da IA como 400px */
+        margin-left: 40px;
+        /* Adicionando margem esquerda ao contêiner da IA */
+        background: #fff;
+        /* Definindo a cor de fundo do contêiner da IA */
+        border-radius: 8px;
+        /* Adicionando bordas arredondadas ao contêiner da IA */
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        /* Adicionando sombra ao contêiner da IA */
+        padding: 20px;
+        /* Adicionando preenchimento ao contêiner da IA */
+        position: sticky;
+        /* Fixando o contêiner da IA na posição */
+        top: 20px;
+        /* Definindo a posição do contêiner da IA em relação ao topo */
+        max-height: calc(100vh - 40px);
+        /* Definindo a altura máxima do contêiner da IA */
+        overflow-y: auto;
+        /* Adicionando barra de rolagem vertical ao contêiner da IA */
+      }
 
-  #board-visualizer {
-    width: 100%;
-    max-width: 400px;
-    height: auto;
-    margin-bottom: 20px;
-    border: 2px solid #3498db;
-    border-radius: 4px;
-  }
+      #board-visualizer {
+        width: 100%;
+        /* Definindo a largura da visualização do tabuleiro como 100% */
+        max-width: 400px;
+        /* Definindo a largura máxima da visualização do tabuleiro como 400px */
+        height: auto;
+        /* Definindo a altura da visualização do tabuleiro como automática */
+        margin-bottom: 20px;
+        /* Adicionando margem inferior à visualização do tabuleiro */
+        border: 2px solid #3498db;
+        /* Adicionando borda à visualização do tabuleiro */
+        border-radius: 4px;
+        /* Adicionando bordas arredondadas à visualização do tabuleiro */
+      }
 
-  .ai-info {
-    background-color: #ecf0f1;
-    border-radius: 4px;
-    padding: 15px;
-    margin-bottom: 20px;
-  }
+      .ai-info {
+        background-color: #ecf0f1;
+        /* Definindo a cor de fundo das informações da IA */
+        border-radius: 4px;
+        /* Adicionando bordas arredondadas às informações da IA */
+        padding: 15px;
+        /* Adicionando preenchimento às informações da IA */
+        margin-bottom: 20px;
+        /* Adicionando margem inferior às informações da IA */
+      }
 
-  .ai-info h3 {
-    margin-top: 0;
-    color: #2c3e50;
-  }
+      .ai-info h3 {
+        margin-top: 0;
+        /* Removendo a margem superior do título das informações da IA */
+        color: #2c3e50;
+        /* Definindo a cor do título das informações da IA */
+      }
 
-  .ai-stat {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px;
-  }
+      .ai-stat {
+        display: flex;
+        /* Definindo o layout das estatísticas da IA como flexível */
+        justify-content: space-between;
+        /* Distribuindo as estatísticas da IA uniformemente */
+        margin-bottom: 10px;
+        /* Adicionando margem inferior às estatísticas da IA */
+      }
 
-  .ai-stat-label {
-    font-weight: bold;
-  }
+      .ai-stat-label {
+        font-weight: bold;
+        /* Definindo o peso da fonte dos rótulos das estatísticas da IA como negrito */
+      }
 
-  #minimax-tree {
-    width: 100%;
-    height: 300px;
-    overflow: auto;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 10px;
-  }
+      #minimax-tree {
+        width: 100%;
+        /* Definindo a largura da árvore minimax como 100% */
+        height: 300px;
+        /* Definindo a altura da árvore minimax como 300px */
+        overflow: auto;
+        /* Adicionando barra de rolagem à árvore minimax */
+        border: 1px solid #ddd;
+        /* Adicionando borda à árvore minimax */
+        border-radius: 4px;
+        /* Adicionando bordas arredondadas à árvore minimax */
+        padding: 10px;
+        /* Adicionando preenchimento à árvore minimax */
+      }
 
-  .node {
-    display: inline-block;
-    border: 1px solid #3498db;
-    border-radius: 4px;
-    margin: 2px;
-    padding: 4px 8px;
-    font-size: 12px;
-    background-color: #ecf0f1;
-  }
+      .node {
+        display: inline-block;
+        /* Definindo o layout dos nós como inline-block */
+        border: 1px solid #3498db;
+        /* Adicionando borda aos nós */
+        border-radius: 4px;
+        /* Adicionando bordas arredondadas aos nós */
+        margin: 2px;
+        /* Adicionando margem aos nós */
+        padding: 4px 8px;
+        /* Adicionando preenchimento aos nós */
+        font-size: 12px;
+        /* Definindo o tamanho da fonte dos nós */
+        background-color: #ecf0f1;
+        /* Definindo a cor de fundo dos nós */
+      }
 
-  .best-move {
-    background-color: #2ecc71;
-    color: #fff;
-  }
+      .best-move {
+        background-color: #2ecc71;
+        /* Definindo a cor de fundo do melhor movimento */
+        color: #fff;
+        /* Definindo a cor do texto do melhor movimento */
+      }
 
-  footer {
-    text-align: center;
-    margin-top: 40px;
-    padding: 20px;
-    background-color: #34495e;
-    color: #ecf0f1;
-  }
+      footer {
+        text-align: center;
+        /* Centralizando o conteúdo do rodapé */
+        margin-top: 40px;
+        /* Adicionando margem superior ao rodapé */
+        padding: 20px;
+        /* Adicionando preenchimento ao rodapé */
+        background-color: #34495e;
+        /* Definindo a cor de fundo do rodapé */
+        color: #ecf0f1;
+        /* Definindo a cor do texto do rodapé */
+      }
 
-  footer a {
-    color: #3498db;
-    text-decoration: none;
-  }
+      footer a {
+        color: #3498db;
+        /* Definindo a cor dos links do rodapé */
+        text-decoration: none;
+        /* Removendo a decoração dos links do rodapé */
+      }
 
-  footer a:hover {
-    text-decoration: underline;
-  }
+      footer a:hover {
+        text-decoration: underline;
+        /* Sublinhando os links do rodapé ao passar o mouse sobre eles */
+      }
 
-  #language-switch {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    z-index: 1000;
-  }
-</style>
-</head>
-<body>
-<div id="language-switch">
-  <button onclick="switchLanguage('en')">EN</button>
-  <button onclick="switchLanguage('pt')">PT</button>
-</div>
-<div class="container">
-  <h1>Damas Clássico - Jogue contra IA Avançada - Um projeto por Daniel M demonstrando conceitos de Minimax com alpha-beta pruning e heuristica</h1>
-  
-  <div class="game-area">
-    <div class="board-container">
-      <div id="message">Sua vez! Clique em uma peça para selecioná-la, depois clique em um quadrado válido para mover.</div>
-      <div class="board" id="checkerboard">
-        <!-- O tabuleiro será gerado pelo JavaScript -->
-      </div>
-      <div id="controls">
-        <button onclick="resetGame()">Novo Jogo</button>
-        <button onclick="location.href='https://classicgames.checkers/how-to-play'">Como Jogar</button>
-        <button onclick="location.href='https://classicgames.checkers/'">Menu Principal</button>
+      #language-switch {
+        position: fixed;
+        /* Fixando o seletor de idioma na posição */
+        top: 10px;
+        /* Definindo a posição do seletor de idioma em relação ao topo */
+        right: 10px;
+        /* Definindo a posição do seletor de idioma em relação à direita */
+        z-index: 1000;
+        /* Definindo a ordem de exibição do seletor de idioma */
+      }
+    </style>
+  </head>
+  <body>
+    <div id="language-switch">
+      <!-- Seletor de idioma -->
+      <button onclick="switchLanguage('en')">EN</button>
+      <!-- Botão para alternar o idioma para inglês -->
+      <button onclick="switchLanguage('pt')">PT</button>
+      <!-- Botão para alternar o idioma para português -->
+    </div>
+    <div class="container">
+      <!-- Contêiner principal do jogo -->
+      <h1>
+        <!-- Título do jogo --> Damas Clássico - Jogue contra IA Avançada - Um projeto por Daniel M demonstrando conceitos de Minimax com alpha-beta pruning e heuristica
+      </h1>
+      <div class="game-area">
+        <!-- Contêiner do jogo -->
+        <div class="board-container">
+          <!-- Contêiner do tabuleiro -->
+          <div id="message">
+            <!-- Mensagem de instruções para o jogador --> Sua vez! Clique em uma peça para selecioná-la, depois clique em um quadrado válido para mover.
+          </div>
+          <div class="board" id="checkerboard">
+            <!-- Tabuleiro do jogo -->
+            <!-- O tabuleiro será gerado pelo JavaScript -->
+          </div>
+          <div id="controls">
+            <!-- Controles do jogo -->
+            <button onclick="resetGame()">
+              <!-- Botão para reiniciar o jogo --> Novo Jogo
+            </button>
+            <button onclick="location.href='https://classicgames.checkers/how-to-play'">
+              <!-- Botão para abrir as instruções do jogo --> Como Jogar
+            </button>
+            <button onclick="location.href='https://classicgames.checkers/'">
+              <!-- Botão para voltar ao menu principal --> Menu Principal
+            </button>
+          </div>
+        </div>
+        <div class="ai-container">
+          <!-- Contêiner das informações da IA -->
+          <h2>Visualização da Decisão da IA</h2>
+          <!-- Título das informações da IA -->
+          <canvas id="board-visualizer" width="400" height="400">
+            <!-- Visualização do tabuleiro da IA -->
+          </canvas>
+          <div class="ai-info">
+            <!-- Informações da IA -->
+            <h3>Estatísticas da IA</h3>
+            <!-- Título das estatísticas da IA -->
+            <div class="ai-stat">
+              <!-- Estatística da avaliação da IA -->
+              <span class="ai-stat-label">Avaliação:</span>
+              <!-- Rótulo da estatística da avaliação da IA -->
+              <span id="ai-evaluation">0</span>
+              <!-- Valor da estatística da avaliação da IA -->
+            </div>
+            <div class="ai-stat">
+              <!-- Estatística da profundidade da IA -->
+              <span class="ai-stat-label">Profundidade:</span>
+              <!-- Rótulo da estatística da profundidade da IA -->
+              <span id="ai-depth">0</span>
+              <!-- Valor da estatística da profundidade da IA -->
+            </div>
+            <div class="ai-stat">
+              <!-- Estatística dos nós avaliados da IA -->
+              <span class="ai-stat-label">Nós Avaliados:</span>
+              <!-- Rótulo da estatística dos nós avaliados da IA -->
+              <span id="ai-nodes">0</span>
+              <!-- Valor da estatística dos nós avaliados da IA -->
+            </div>
+          </div>
+          <h3>Árvore Minimax</h3>
+          <!-- Título da árvore minimax -->
+          <div id="minimax-tree">
+            <!-- Árvore minimax -->
+          </div>
+        </div>
       </div>
     </div>
-    
-    <div class="ai-container">
-      <h2>Visualização da Decisão da IA</h2>
-      <canvas id="board-visualizer" width="400" height="400"></canvas>
-      <div class="ai-info">
-        <h3>Estatísticas da IA</h3>
-        <div class="ai-stat">
-          <span class="ai-stat-label">Avaliação:</span>
-          <span id="ai-evaluation">0</span>
-        </div>
-        <div class="ai-stat">
-          <span class="ai-stat-label">Profundidade:</span>
-          <span id="ai-depth">0</span>
-        </div>
-        <div class="ai-stat">
-          <span class="ai-stat-label">Nós Avaliados:</span>
-          <span id="ai-nodes">0</span>
-        </div>
-      </div>
-      <h3>Árvore Minimax</h3>
-      <div id="minimax-tree"></div>
-    </div>
-  </div>
-</div>
-
-<footer>
-  <p>Criado por Daniel M com ❤️</p>
-</footer>
-
-<script>
-const board = document.getElementById('checkerboard');
-const message = document.getElementById('message');
-const boardVisualizer = document.getElementById('board-visualizer');
-const minimaxTree = document.getElementById('minimax-tree');
-const aiEvaluation = document.getElementById('ai-evaluation');
-const aiDepth = document.getElementById('ai-depth');
-const aiNodes = document.getElementById('ai-nodes');
-let selectedPiece = null;
-let currentPlayer = 'white';
-const MAX_DEPTH = 4;
-let nodesEvaluated = 0;
-
-const translations = {
-  en: {
-    title: "Classic Checkers - Play vs Advanced AI - A project by Daniel M demonstrating Minimax concepts with alpha-beta pruning and heuristics",
-    message: "Your turn! Click on a piece to select it, then click on a valid square to move.",
-    newGame: "New Game",
-    howToPlay: "How to Play",
-    mainMenu: "Main Menu",
-    aiDecision: "AI Decision Visualization",
-    aiStats: "AI Stats",
-    evaluation: "Evaluation:",
-    depth: "Depth:",
-    nodesEvaluated: "Nodes Evaluated:",
-    minimaxTree: "Minimax Tree",
-    aiThinking: "AI is thinking...",
-    aiWins: "AI wins! Game over.",
-    youWin: "Congratulations! You win!",
-    aiCouldntMove: "AI couldn't move. Your turn!",
-    createdBy: "Created by Daniel M with ❤️"
-  },
-  pt: {
-    title: "Damas Clássico - Jogue contra IA Avançada - Um projeto por Daniel M demonstrando conceitos de Minimax com alpha-beta pruning e heuristica",
-    message: "Sua vez! Clique em uma peça para selecioná-la, depois clique em um quadrado válido para mover.",
-    newGame: "Novo Jogo",
-    howToPlay: "Como Jogar",
-    mainMenu: "Menu Principal",
-    aiDecision: "Visualização da Decisão da IA",
-    aiStats: "Estatísticas da IA",
-    evaluation: "Avaliação:",
-    depth: "Profundidade:",
-    nodesEvaluated: "Nós Avaliados:",
-    minimaxTree: "Árvore Minimax",
-    aiThinking: "A IA está pensando...",
-    aiWins: "A IA venceu! Fim de jogo.",
-    youWin: "Parabéns! Você venceu!",
-    aiCouldntMove: "A IA não pôde se mover. Sua vez!",
-    createdBy: "Criado por Daniel M com ❤️"
-  }
-};
-
-let currentLanguage = 'pt';
-
-function switchLanguage(lang) {
-  currentLanguage = lang;
-  updateTexts();
-}
-
-function updateTexts() {
-  const texts = translations[currentLanguage];
-  document.title = texts.title;
-  document.querySelector('h1').textContent = texts.title;
-  message.textContent = texts.message;
-  document.querySelectorAll('#controls button')[0].textContent = texts.newGame;
-  document.querySelectorAll('#controls button')[1].textContent = texts.howToPlay;
-  document.querySelectorAll('#controls button')[2].textContent = texts.mainMenu;
-  document.querySelector('.ai-container h2').textContent = texts.aiDecision;
-  document.querySelector('.ai-info h3').textContent = texts.aiStats;
-  document.querySelectorAll('.ai-stat-label')[0].textContent = texts.evaluation;
-  document.querySelectorAll('.ai-stat-label')[1].textContent = texts.depth;
-  document.querySelectorAll('.ai-stat-label')[2].textContent = texts.nodesEvaluated;
-  document.querySelector('.ai-container h3:last-of-type').textContent = texts.minimaxTree;
-  document.querySelector('footer p').textContent = texts.createdBy;
-}
-
-function createBoard() {
-  for (let i = 0; i < 8; i++) {
-    for (let j = 0; j < 8; j++) {
-      const square = document.createElement('div');
-      square.className = 'square' + ((i + j) % 2 ? ' black' : '');
-      square.dataset.row = i;
-      square.dataset.col = j;
-      square.addEventListener('click', handleSquareClick);
-      board.appendChild(square);
-
-      if ((i + j) % 2 && (i < 3 || i > 4)) {
-        const piece = document.createElement('div');
-        piece.className = 'piece ' + (i < 3 ? 'red' : 'white');
-        piece.dataset.row = i;
-        piece.dataset.col = j;
-        square.appendChild(piece);
+    <footer>
+      <!-- Rodapé do jogo -->
+      <p>Criado por Daniel M com ❤️</p>
+    </footer>
+    <script>
+      const board = document.getElementById('checkerboard');
+      /* Selecionando o elemento do tabuleiro do jogo */
+      const message = document.getElementById('message');
+      /* Selecionando o elemento da mensagem de instruções para o jogador */
+      const boardVisualizer = document.getElementById('board-visualizer');
+      /* Selecionando o elemento da visualização do tabuleiro da IA */
+      const minimaxTree = document.getElementById('minimax-tree');
+      /* Selecionando o elemento da árvore minimax */
+      const aiEvaluation = document.getElementById('ai-evaluation');
+      /* Selecionando o elemento do valor da estatística da avaliação da IA */
+      const aiDepth = document.getElementById('ai-depth');
+      /* Selecionando o elemento do valor da estatística da profundidade da IA */
+      const aiNodes = document.getElementById('ai-nodes');
+      /* Selecionando o elemento do valor da estatística dos nós avaliados da IA */
+      let selectedPiece = null;
+      /* Variável para armazenar a peça selecionada pelo jogador */
+      let currentPlayer = 'white';
+      /* Variável para armazenar o jogador atual */
+      const MAX_DEPTH = 4;
+      /* Constante para definir a profundidade máxima da árvore minimax */
+      let nodesEvaluated = 0;
+      /* Variável para contar o número de nós avaliados pela IA */
+      const translations = {
+        en: {
+          /* Objeto com as traduções para inglês */
+          title: "Classic Checkers - Play vs Advanced AI - A project by Daniel M demonstrating Minimax concepts with alpha-beta pruning and heuristics",
+          message: "Your turn! Click on a piece to select it, then click on a valid square to move.",
+          newGame: "New Game",
+          howToPlay: "How to Play",
+          mainMenu: "Main Menu",
+          aiDecision: "AI Decision Visualization",
+          aiStats: "AI Stats",
+          evaluation: "Evaluation:",
+          depth: "Depth:",
+          nodesEvaluated: "Nodes Evaluated:",
+          minimaxTree: "Minimax Tree",
+          aiThinking: "AI is thinking...",
+          aiWins: "AI wins! Game over.",
+          youWin: "Congratulations! You win!",
+          aiCouldntMove: "AI couldn't move. Your turn!",
+          createdBy: "Created by Daniel M with ❤️"
+        },
+        pt: {
+          /* Objeto com as traduções para português */
+          title: "Damas Clássico - Jogue contra IA Avançada - Um projeto por Daniel M demonstrando conceitos de Minimax com alpha-beta pruning e heuristica",
+          message: "Sua vez! Clique em uma peça para selecioná-la, depois clique em um quadrado válido para mover.",
+          newGame: "Novo Jogo",
+          howToPlay: "Como Jogar",
+          mainMenu: "Menu Principal",
+          aiDecision: "Visualização da Decisão da IA",
+          aiStats: "Estatísticas da IA",
+          evaluation: "Avaliação:",
+          depth: "Profundidade:",
+          nodesEvaluated: "Nós Avaliados:",
+          minimaxTree: "Árvore Minimax",
+          aiThinking: "A IA está pensando...",
+          aiWins: "A IA venceu! Fim de jogo.",
+          youWin: "Parabéns! Você venceu!",
+          aiCouldntMove: "A IA não pôde se mover. Sua vez!",
+          createdBy: "Criado por Daniel M com ❤️"
+        }
+      };
+      let currentLanguage = 'pt';
+      /* Variável para armazenar o idioma atual */
+      function switchLanguage(lang) {
+        /* Função para alternar o idioma do jogo */
+        currentLanguage = lang;
+        /* Atualizando o idioma atual */
+        updateTexts();
+        /* Atualizando os textos do jogo */
       }
-    }
-  }
-}
 
-function handleSquareClick(e) {
-  const square = e.target.classList.contains('square') ? e.target : e.target.parentElement;
-  const piece = square.firstChild;
-
-  if (selectedPiece) {
-    const moves = getValidMoves(selectedPiece);
-    if (moves.includes(square)) {
-      movePiece(selectedPiece, square);
-      selectedPiece.classList.remove('selected');
-      selectedPiece = null;
-      currentPlayer = 'red';
-      if (checkForWinner()) return;
-      message.textContent = translations[currentLanguage].aiThinking;
-      setTimeout(makeAIMove, 500);
-    } else {
-      selectedPiece.classList.remove('selected');
-      selectedPiece = null;
-    }
-  } else if (piece && piece.classList.contains('white')) {
-    piece.classList.add('selected');
-    selectedPiece = piece;
-  }
-}
-
-function getValidMoves(piece) {
-  const row = parseInt(piece.dataset.row);
-  const col = parseInt(piece.dataset.col);
-  const isKing = piece.classList.contains('king');
-  const direction = piece.classList.contains('white') ? -1 : 1;
-  let moves = [];
-
-  function checkMove(r, c, jumpRow, jumpCol) {
-    const targetSquare = document.querySelector(`.square[data-row="${r}"][data-col="${c}"]`);
-    const jumpSquare = document.querySelector(`.square[data-row="${jumpRow}"][data-col="${jumpCol}"]`);
-    if (targetSquare && !targetSquare.firstChild) {
-      moves.push(targetSquare);
-    } else if (targetSquare && targetSquare.firstChild && 
-               targetSquare.firstChild.classList.contains(currentPlayer === 'white' ? 'red' : 'white') &&
-               jumpSquare && !jumpSquare.firstChild) {
-      moves.push(jumpSquare);
-    }
-  }
-
-  checkMove(row + direction, col - 1, row + 2 * direction, col - 2);
-  checkMove(row + direction, col + 1, row + 2 * direction, col + 2);
-
-  if (isKing) {
-    checkMove(row - direction, col - 1, row - 2 * direction, col - 2);
-    checkMove(row - direction, col + 1, row - 2 * direction, col + 2);
-  }
-
-  return moves;
-}
-
-function movePiece(piece, targetSquare) {
-  const startRow = parseInt(piece.dataset.row);
-  const startCol = parseInt(piece.dataset.col);
-  const endRow = parseInt(targetSquare.dataset.row);
-  const endCol = parseInt(targetSquare.dataset.col);
-
-  if (Math.abs(startRow - endRow) === 2) {
-    const jumpedRow = (startRow + endRow) / 2;
-    const jumpedCol = (startCol + endCol) / 2;
-    const jumpedSquare = document.querySelector(`.square[data-row="${jumpedRow}"][data-col="${jumpedCol}"]`);
-    if (jumpedSquare && jumpedSquare.firstChild) {
-      jumpedSquare.removeChild(jumpedSquare.firstChild);
-    }
-  }
-
-  targetSquare.appendChild(piece);
-  piece.dataset.row = endRow;
-  piece.dataset.col = endCol;
-
-  if ((currentPlayer === 'white' && endRow === 0) || (currentPlayer === 'red' && endRow === 7)) {
-    piece.classList.add('king');
-  }
-}
-
-function makeAIMove() {
-  nodesEvaluated = 0;
-  const gameState = getBoardState();
-  const bestMove = minimax(gameState, MAX_DEPTH, -Infinity, Infinity, true);
-  
-  if (bestMove.move) {
-    const [startRow, startCol, endRow, endCol] = bestMove.move;
-    const startSquare = document.querySelector(`.square[data-row="${startRow}"][data-col="${startCol}"]`);
-    const endSquare = document.querySelector(`.square[data-row="${endRow}"][data-col="${endCol}"]`);
-    const piece = startSquare.firstChild;
-    
-    movePiece(piece, endSquare);
-    currentPlayer = 'white';
-    message.textContent = translations[currentLanguage].message;
-    visualizeDecision(bestMove);
-    
-    aiEvaluation.textContent = bestMove.evaluation.toFixed(2);
-    aiDepth.textContent = MAX_DEPTH;
-    aiNodes.textContent = nodesEvaluated;
-    
-    if (checkForWinner()) return;
-  } else {
-    message.textContent = translations[currentLanguage].aiCouldntMove;
-  }
-}
-
-function getBoardState() {
-  const state = [];
-  for (let i = 0; i < 8; i++) {
-    state[i] = [];
-    for (let j = 0; j < 8; j++) {
-      const square = document.querySelector(`.square[data-row="${i}"][data-col="${j}"]`);
-      const piece = square.firstChild;
-      if (piece) {
-        state[i][j] = {
-          color: piece.classList.contains('red') ? 'red' : 'white',
-          isKing: piece.classList.contains('king')
-        };
-      } else {
-        state[i][j] = null;
+      function updateTexts() {
+        /* Função para atualizar os textos do jogo */
+        const texts = translations[currentLanguage];
+        /* Selecionando as traduções do idioma atual */
+        document.title = texts.title;
+        /* Atualizando o título do jogo */
+        document.querySelector('h1').textContent = texts.title;
+        /* Atualizando o título do jogo */
+        message.textContent = texts.message;
+        /* Atualizando a mensagem de instruções para o jogador */
+        document.querySelectorAll('#controls button')[0].textContent = texts.newGame;
+        /* Atualizando o texto do botão para reiniciar o jogo */
+        document.querySelectorAll('#controls button')[1].textContent = texts.howToPlay;
+        /* Atualizando o texto do botão para abrir as instruções do jogo */
+        document.querySelectorAll('#controls button')[2].textContent = texts.mainMenu;
+        /* Atualizando o texto do botão para voltar ao menu principal */
+        document.querySelector('.ai-container h2').textContent = texts.aiDecision;
+        /* Atualizando o título das informações da IA */
+        document.querySelector('.ai-info h3').textContent = texts.aiStats;
+        /* Atualizando o título das estatísticas da IA */
+        document.querySelectorAll('.ai-stat-label')[0].textContent = texts.evaluation;
+        /* Atualizando o rótulo da estatística da avaliação da IA */
+        document.querySelectorAll('.ai-stat-label')[1].textContent = texts.depth;
+        /* Atualizando o rótulo da estatística da profundidade da IA */
+        document.querySelectorAll('.ai-stat-label')[2].textContent = texts.nodesEvaluated;
+        /* Atualizando o rótulo da estatística dos nós avaliados da IA */
+        document.querySelector('.ai-container h3:last-of-type').textContent = texts.minimaxTree;
+        /* Atualizando o título da árvore minimax */
+        document.querySelector('footer p').textContent = texts.createdBy;
+        /* Atualizando o texto do rodapé do jogo */
       }
-    }
-  }
-  return state;
-}
 
-function minimax(state, depth, alpha, beta, maximizingPlayer, parentNode = null) {
-  nodesEvaluated++;
-  if (depth === 0 || isGameOver(state)) {
-    const evaluation = evaluateBoard(state);
-    if (parentNode) {
-      const node = createNode(state, evaluation, null, depth);
-      parentNode.children.push(node);
-    }
-    return { evaluation, move: null };
-  }
-
-  let bestMove = null;
-  let bestEvaluation = maximizingPlayer ? -Infinity : Infinity;
-  const moves = getAllPossibleMoves(state, maximizingPlayer ? 'red' : 'white');
-  const currentNode = createNode(state, null, null, depth);
-
-  if (parentNode) {
-    parentNode.children.push(currentNode);
-  }
-
-  for (const move of moves) {
-    const newState = applyMove(state, move);
-    const result = minimax(newState, depth - 1, alpha, beta, !maximizingPlayer, currentNode);
-    const evaluation = result.evaluation;
-
-    if (maximizingPlayer) {
-      if (evaluation > bestEvaluation) {
-        bestEvaluation = evaluation;
-        bestMove = move;
+      function createBoard() {
+        /* Função para criar o tabuleiro do jogo */
+        for (let i = 0; i < 8; i++) {
+          /* Iterando sobre as linhas do tabuleiro */
+          for (let j = 0; j < 8; j++) {
+            /* Iterando sobre as colunas do tabuleiro */
+            const square = document.createElement('div');
+            /* Criando um elemento para o quadrado do tabuleiro */
+            square.className = 'square' + ((i + j) % 2 ? ' black' : '');
+            /* Adicionando a classe do quadrado ao elemento */
+            square.dataset.row = i;
+            /* Adicionando a linha do quadrado ao elemento */
+            square.dataset.col = j;
+            /* Adicionando a coluna do quadrado ao elemento */
+            square.addEventListener('click', handleSquareClick);
+            /* Adicionando um evento de clique ao quadrado */
+            board.appendChild(square);
+            /* Adicionando o quadrado ao tabuleiro */
+            if ((i + j) % 2 && (i < 3 || i > 4)) {
+              /* Verificando se o quadrado é preto e está na posição inicial das peças */
+              const piece = document.createElement('div');
+              /* Criando um elemento para a peça do tabuleiro */
+              piece.className = 'piece ' + (i < 3 ? 'red' : 'white');
+              /* Adicionando a classe da peça ao elemento */
+              piece.dataset.row = i;
+              /* Adicionando a linha da peça ao elemento */
+              piece.dataset.col = j;
+              /* Adicionando a coluna da peça ao elemento */
+              square.appendChild(piece);
+              /* Adicionando a peça ao quadrado */
+            }
+          }
+        }
       }
-      alpha = Math.max(alpha, evaluation);
-    } else {
-      if (evaluation < bestEvaluation) {
-        bestEvaluation = evaluation;
-        bestMove = move;
+
+      function handleSquareClick(e) {
+        /* Função para lidar com o evento de clique no quadrado do tabuleiro */
+        const square = e.target.classList.contains('square') ? e.target : e.target.parentElement;
+        /* Selecionando o quadrado clicado */
+        const piece = square.firstChild;
+        /* Selecionando a peça no quadrado clicado */
+        if (selectedPiece) {
+          /* Verificando se há uma peça selecionada */
+          const moves = getValidMoves(selectedPiece);
+          /* Selecionando os movimentos válidos da peça selecionada */
+          if (moves.includes(square)) {
+            /* Verificando se o quadrado clicado é um movimento válido da peça selecionada */
+            movePiece(selectedPiece, square);
+            /* Movendo a peça selecionada para o quadrado clicado */
+            selectedPiece.classList.remove('selected');
+            /* Removendo a classe de seleção da peça selecionada */
+            selectedPiece = null;
+            /* Removendo a peça selecionada */
+            currentPlayer = 'red';
+            /* Alterando o jogador atual */
+            if (checkForWinner()) return;
+            /* Verificando se há um vencedor */
+            message.textContent = translations[currentLanguage].aiThinking;
+            /* Atualizando a mensagem de instruções para o jogador */
+            setTimeout(makeAIMove, 500);
+            /* Chamando a função para fazer o movimento da IA após um atraso */
+          } else {
+            selectedPiece.classList.remove('selected');
+            /* Removendo a classe de seleção da peça selecionada */
+            selectedPiece = null;
+            /* Removendo a peça selecionada */
+          }
+        } else if (piece && piece.classList.contains('white')) {
+          /* Verificando se há uma peça branca no quadrado clicado */
+          piece.classList.add('selected');
+          /* Adicionando a classe de seleção à peça branca no quadrado clicado */
+          selectedPiece = piece;
+          /* Atualizando a peça selecionada */
+        }
       }
-      beta = Math.min(beta, evaluation);
-    }
 
-    if (beta <= alpha) {
-      break;
-    }
-  }
-
-  currentNode.evaluation = bestEvaluation;
-  currentNode.move = bestMove;
-
-  if (depth === MAX_DEPTH) {
-    renderMinimaxTree(currentNode);
-  }
-
-  return { evaluation: bestEvaluation, move: bestMove };
-}
-
-function createNode(state, evaluation, move, depth) {
-  return {
-    state,
-    evaluation,
-    move,
-    depth,
-    children: []
-  };
-}
-
-function renderMinimaxTree(root) {
-  minimaxTree.innerHTML = '';
-  const queue = [{ node: root, element: minimaxTree, depth: 0 }];
-
-  while (queue.length > 0) {
-    const { node, element: parentElement, depth } = queue.shift();
-    const nodeElement = document.createElement('div');
-    nodeElement.className = 'node';
-    if (depth === 0 && node.move) {
-      nodeElement.classList.add('best-move');
-    }
-    nodeElement.textContent = `D${MAX_DEPTH - depth}, E: ${node.evaluation?.toFixed(2) || 'N/A'}`;
-    if (node.move) {
-      nodeElement.textContent += `, M: (${node.move.join(',')})`;
-    }
-    parentElement.appendChild(nodeElement);
-
-    if (depth < 2) { // Limit tree depth for better visualization
-      for (const child of node.children) {
-        queue.push({ node: child, element: nodeElement, depth: depth + 1 });
+      function getValidMoves(piece) {
+        /* Função para selecionar os movimentos válidos da peça */
+        const row = parseInt(piece.dataset.row);
+        /* Selecionando a linha da peça */
+        const col = parseInt(piece.dataset.col);
+        /* Selecionando a coluna da peça */
+        const isKing = piece.classList.contains('king');
+        /* Verificando se a peça é um rei */
+        const direction = piece.classList.contains('white') ? -1 : 1;
+        /* Selecionando a direção da peça */
+        let moves = [];
+        /* Criando um array para armazenar os movimentos válidos da peça */
+        function checkMove(r, c, jumpRow, jumpCol) {
+          /* Função para verificar se o movimento é válido */
+          const targetSquare = document.querySelector(`.square[data-row="${r}"][data-col="${c}"]`);
+          /* Selecionando o quadrado de destino do movimento */
+          const jumpSquare = document.querySelector(`.square[data-row="${jumpRow}"][data-col="${jumpCol}"]`);
+          /* Selecionando o quadrado de pulo do movimento */
+          if (targetSquare && !targetSquare.firstChild) {
+            /* Verificando se o quadrado de destino é válido */
+            moves.push(targetSquare);
+            /* Adicionando o quadrado de destino aos movimentos válidos da peça */
+          } else if (targetSquare && targetSquare.firstChild && targetSquare.firstChild.classList.contains(currentPlayer === 'white' ? 'red' : 'white') && jumpSquare && !jumpSquare.firstChild) {
+            /* Verificando se o movimento é um pulo válido */
+            moves.push(jumpSquare);
+            /* Adicionando o quadrado de pulo aos movimentos válidos da peça */
+          }
+        }
+        checkMove(row + direction, col - 1, row + 2 * direction, col - 2);
+        /* Verificando o movimento para a esquerda */
+        checkMove(row + direction, col + 1, row + 2 * direction, col + 2);
+        /* Verificando o movimento para a direita */
+        if (isKing) {
+          /* Verificando se a peça é um rei */
+          checkMove(row - direction, col - 1, row - 2 * direction, col - 2);
+          /* Verificando o movimento para trás e para a esquerda */
+          checkMove(row - direction, col + 1, row - 2 * direction, col + 2);
+          /* Verificando o movimento para trás e para a direita */
+        }
+        return moves;
+        /* Retornando os movimentos válidos da peça */
       }
-    }
-  }
-}
 
-function getAllPossibleMoves(state, player) {
-  const moves = [];
-  for (let i = 0; i < 8; i++) {
-    for (let j = 0; j < 8; j++) {
-      if (state[i][j] && state[i][j].color === player) {
-        moves.push(...getPossibleMovesForPiece(state, i, j));
+      function movePiece(piece, targetSquare) {
+        /* Função para mover a peça para o quadrado de destino */
+        const startRow = parseInt(piece.dataset.row);
+        /* Selecionando a linha da peça */
+        const startCol = parseInt(piece.dataset.col);
+        /* Selecionando a coluna da peça */
+        const endRow = parseInt(targetSquare.dataset.row);
+        /* Selecionando a linha do quadrado de destino */
+        const endCol = parseInt(targetSquare.dataset.col);
+        /* Selecionando a coluna do quadrado de destino */
+        if (Math.abs(startRow - endRow) === 2) {
+          /* Verificando se o movimento é um pulo */
+          const jumpedRow = (startRow + endRow) / 2;
+          /* Selecionando a linha do quadrado de pulo */
+          const jumpedCol = (startCol + endCol) / 2;
+          /* Selecionando a coluna do quadrado de pulo */
+          const jumpedSquare = document.querySelector(`.square[data-row="${jumpedRow}"][data-col="${jumpedCol}"]`);
+          /* Selecionando o quadrado de pulo */
+          if (jumpedSquare && jumpedSquare.firstChild) {
+            /* Verificando se o quadrado de pulo contém uma peça */
+            jumpedSquare.removeChild(jumpedSquare.firstChild);
+            /* Removendo a peça do quadrado de pulo */
+          }
+        }
+        targetSquare.appendChild(piece);
+        /* Movendo a peça para o quadrado de destino */
+        piece.dataset.row = endRow;
+        /* Atualizando a linha da peça */
+        piece.dataset.col = endCol;
+        /* Atualizando a coluna da peça */
+        if ((currentPlayer === 'white' && endRow === 0) || (currentPlayer === 'red' && endRow === 7)) {
+          /* Verificando se a peça alcançou a última linha do tabuleiro */
+          piece.classList.add('king');
+          /* Adicionando a classe de rei à peça */
+        }
       }
-    }
-  }
-  return moves;
-}
 
-function getPossibleMovesForPiece(state, row, col) {
-  const moves = [];
-  const piece = state[row][col];
-  const directions = piece.isKing ? [-1, 1] : [piece.color === 'red' ? 1 : -1];
-
-  for (const dRow of directions) {
-    for (const dCol of [-1, 1]) {
-      if (isValidMove(state, row, col, row + dRow, col + dCol)) {
-        moves.push([row, col, row + dRow, col + dCol]);
-      }
-      if (isValidJump(state, row, col, row + dRow, col + dCol, row + 2 * dRow, col + 2 * dCol)) {
-        moves.push([row, col, row + 2 * dRow, col + 2 * dCol]);
-      }
-    }
-  }
-
-  return moves;
-}
-
-function isValidMove(state, startRow, startCol, endRow, endCol) {
-  return endRow >= 0 && endRow < 8 && endCol >= 0 && endCol < 8 && !state[endRow][endCol];
-}
-
-function isValidJump(state, startRow, startCol, midRow, midCol, endRow, endCol) {
-  return isValidMove(state, startRow, startCol, endRow, endCol) &&
-         state[midRow][midCol] &&
-         state[midRow][midCol].color !== state[startRow][startCol].color;
-}
-
-function applyMove(state, move) {
-  const [startRow, startCol, endRow, endCol] = move;
-  const newState = JSON.parse(JSON.stringify(state));
-  newState[endRow][endCol] = newState[startRow][startCol];
-  newState[startRow][startCol] = null;
-
-  if (Math.abs(startRow - endRow) === 2) {
-    const midRow = (startRow + endRow) / 2;
-    const midCol = (startCol + endCol) / 2;
-    newState[midRow][midCol] = null;
-  }
-
-  if ((endRow === 0 && newState[endRow][endCol].color === 'white') ||
-      (endRow === 7 && newState[endRow][endCol].color === 'red')) {
-    newState[endRow][endCol].isKing = true;
-  }
-
-  return newState;
-}
-
-function evaluateBoard(state) {
-  let score = 0;
-  for (let i = 0; i < 8; i++) {
-    for (let j = 0; j < 8; j++) {
-      if (state[i][j]) {
-        const pieceValue = state[i][j].isKing ? 3 : 1;
-        score += state[i][j].color === 'red' ? pieceValue : -pieceValue;
-        
-        // Positional bonuses
-        if (state[i][j].color === 'red') {
-          score += 0.1 * i;  // Encourage advancement
+      function makeAIMove() {
+        /* Função para fazer o movimento da IA */
+        nodesEvaluated = 0;
+        /* Zerando o contador de nós avaliados pela IA */
+        const gameState = getBoardState();
+        /* Selecionando o estado atual do tabuleiro */
+        const bestMove = minimax(gameState, MAX_DEPTH, -Infinity, Infinity, true);
+        /* Selecionando o melhor movimento da IA */
+        if (bestMove.move) {
+          /* Verificando se há um melhor movimento da IA */
+          const [startRow, startCol, endRow, endCol] = bestMove.move;
+          /* Selecionando o movimento da IA */
+          const startSquare = document.querySelector(`.square[data-row="${startRow}"][data-col="${startCol}"]`);
+          /* Selecionando o quadrado de origem do movimento da IA */
+          const endSquare = document.querySelector(`.square[data-row="${endRow}"][data-col="${endCol}"]`);
+          /* Selecionando o quadrado de destino do movimento da IA */
+          const piece = startSquare.firstChild;
+          /* Selecionando a peça do movimento da IA */
+          movePiece(piece, endSquare);
+          /* Movendo a peça da IA para o quadrado de destino */
+          currentPlayer = 'white';
+          /* Alterando o jogador atual */
+          message.textContent = translations[currentLanguage].message;
+          /* Atualizando a mensagem de instruções para o jogador */
+          visualizeDecision(bestMove);
+          /* Visualizando a decisão da IA */
+          aiEvaluation.textContent = bestMove.evaluation.toFixed(2);
+          /* Atualizando o valor da estatística da avaliação da IA */
+          aiDepth.textContent = MAX_DEPTH;
+          /* Atualizando o valor da estatística da profundidade da IA */
+          aiNodes.textContent = nodesEvaluated;
+          /* Atualizando o valor da estatística dos nós avaliados da IA */
+          if (checkForWinner()) return;
+          /* Verificando se há um vencedor */
         } else {
-          score -= 0.1 * (7 - i);
-        }
-        
-        // Center control bonus
-        if (j > 1 && j < 6) {
-          score += state[i][j].color === 'red' ? 0.05 : -0.05;
+          message.textContent = translations[currentLanguage].aiCouldntMove;
+          /* Atualizando a mensagem de instruções para o jogador */
         }
       }
-    }
-  }
-  return score;
-}
 
-function isGameOver(state) {
-  let redPieces = 0;
-  let whitePieces = 0;
-  for (let i = 0; i < 8; i++) {
-    for (let j = 0; j < 8; j++) {
-      if (state[i][j]) {
-        if (state[i][j].color === 'red') redPieces++;
-        else whitePieces++;
+      function getBoardState() {
+        /* Função para selecionar o estado atual do tabuleiro */
+        const state = [];
+        /* Criando um array para armazenar o estado atual do tabuleiro */
+        for (let i = 0; i < 8; i++) {
+          /* Iterando sobre as linhas do tabuleiro */
+          state[i] = [];
+          /* Criando um array para armazenar a linha atual do tabuleiro */
+          for (let j = 0; j < 8; j++) {
+            /* Iterando sobre as colunas do tabuleiro */
+            const square = document.querySelector(`.square[data-row="${i}"][data-col="${j}"]`);
+            /* Selecionando o quadrado atual do tabuleiro */
+            const piece = square.firstChild;
+            /* Selecionando a peça no quadrado atual do tabuleiro */
+            if (piece) {
+              /* Verificando se há uma peça no quadrado atual do tabuleiro */
+              state[i][j] = {
+                color: piece.classList.contains('red') ? 'red' : 'white',
+                /* Selecionando a cor da peça no quadrado atual do tabuleiro */
+                isKing: piece.classList.contains('king')
+                /* Verificando se a peça no quadrado atual do tabuleiro é um rei */
+              };
+            } else {
+              state[i][j] = null;
+              /* Adicionando um valor nulo ao quadrado atual do tabuleiro */
+            }
+          }
+        }
+        return state;
+        /* Retornando o estado atual do tabuleiro */
       }
-    }
-  }
-  return redPieces === 0 || whitePieces === 0;
-}
 
-function checkForWinner() {
-  const whitePieces = document.querySelectorAll('.piece.white');
-  const redPieces = document.querySelectorAll('.piece.red');
+      function minimax(state, depth, alpha, beta, maximizingPlayer, parentNode = null) {
+        /* Função para implementar o algoritmo minimax */
+        nodesEvaluated++;
+        /* Incrementando o contador de nós avaliados pela IA */
+        if (depth === 0 || isGameOver(state)) {
+          /* Verificando se a profundidade atual é zero ou se o jogo acabou */
+          const evaluation = evaluateBoard(state);
+          /* Selecionando a avaliação do estado atual do tabuleiro */
+          if (parentNode) {
+            /* Verificando se há um nó pai */
+            const node = createNode(state, evaluation, null, depth);
+            /* Criando um nó para o estado atual do tabuleiro */
+            parentNode.children.push(node);
+            /* Adicionando o nó ao nó pai */
+          }
+          return {
+            evaluation,
+            move: null
+          };
+          /* Retornando a avaliação do estado atual do tabuleiro */
+        }
+        let bestMove = null;
+        /* Criando uma variável para armazenar o melhor movimento da IA */
+        let bestEvaluation = maximizingPlayer ? -Infinity : Infinity;
+        /* Selecionando a melhor avaliação da IA */
+        const moves = getAllPossibleMoves(state, maximizingPlayer ? 'red' : 'white');
+        /* Selecionando todos os movimentos possíveis da IA */
+        const currentNode = createNode(state, null, null, depth);
+        /* Criando um nó para o estado atual do tabuleiro */
+        if (parentNode) {
+          /* Verificando se há um nó pai */
+          parentNode.children.push(currentNode);
+          /* Adicionando o nó ao nó pai */
+        }
+        for (const move of moves) {
+          /* Iterando sobre os movimentos possíveis da IA */
+          const newState = applyMove(state, move);
+          /* Aplicando o movimento da IA ao estado atual do tabuleiro */
+          const result = minimax(newState, depth - 1, alpha, beta, !maximizingPlayer, currentNode);
+          /* Chamando a função minimax recursivamente para o novo estado do tabuleiro */
+          const evaluation = result.evaluation;
+          /* Selecionando a avaliação do novo estado do tabuleiro */
+          if (maximizingPlayer) {
+            /* Verificando se a IA está maximizando a avaliação */
+            if (evaluation > bestEvaluation) {
+              /* Verificando se a avaliação do novo estado do tabuleiro é maior que a melhor avaliação da IA */
+              bestEvaluation = evaluation;
+              /* Atualizando a melhor avaliação da IA */
+              bestMove = move;
+              /* Atualizando o melhor movimento da IA */
+            }
+            alpha = Math.max(alpha, evaluation);
+            /* Atualizando o valor de alpha */
+          } else {
+            /* Verificando se a IA está minimizando a avaliação */
+            if (evaluation < bestEvaluation) {
+              /* Verificando se a avaliação do novo estado do tabuleiro é menor que a melhor avaliação da IA */
+              bestEvaluation = evaluation;
+              /* Atualizando a melhor avaliação da IA */
+              bestMove = move;
+              /* Atualizando o melhor movimento da IA */
+            }
+            beta = Math.min(beta, evaluation);
+            /* Atualizando o valor de beta */
+          }
+          if (beta <= alpha) {
+            /* Verificando se o algoritmo minimax pode ser interrompido */
+            break;
+          }
+        }
+        currentNode.evaluation = bestEvaluation;
+        /* Atualizando a avaliação do nó atual */
+        currentNode.move = bestMove;
+        /* Atualizando o movimento do nó atual */
+        if (depth === MAX_DEPTH) {
+          /* Verificando se a profundidade atual é a profundidade máxima */
+          renderMinimaxTree(currentNode);
+          /* Renderizando a árvore minimax */
+        }
+        return {
+          evaluation: bestEvaluation,
+          move: bestMove
+        };
+        /* Retornando a melhor avaliação e o melhor movimento da IA */
+      }
 
-  if (whitePieces.length === 0) {
-    message.textContent = translations[currentLanguage].aiWins;
-    return true;
-  } else if (redPieces.length === 0) {
-    message.textContent = translations[currentLanguage].youWin;
-    return true;
-  }
+      function createNode(state, evaluation, move, depth) {
+        /* Função para criar um nó da árvore minimax */
+        return {
+          state,
+          /* Adicionando o estado do tabuleiro ao nó */
+          evaluation,
+          /* Adicionando a avaliação ao nó */
+          move,
+          /* Adicionando o movimento ao nó */
+          depth,
+          /* Adicionando a profundidade ao nó */
+          children: []
+          /* Criando um array para armazenar os filhos do nó */
+        };
+      }
 
-  return false;
-}
-
-function visualizeDecision(decision) {
-  const ctx = boardVisualizer.getContext('2d');
-  ctx.clearRect(0, 0, boardVisualizer.width, boardVisualizer.height);
-  
-  // Draw the board
-  const squareSize = boardVisualizer.width / 8;
-  for (let i = 0; i < 8; i++) {
-    for (let j = 0; j < 8; j++) {
-      ctx.fillStyle = (i + j) % 2 === 0 ? '#deb887' : '#8b4513';
-      ctx.fillRect(j * squareSize, i * squareSize, squareSize, squareSize);
-    }
-  }
-
-  // Draw the pieces
-  const state = getBoardState();
-  for (let i = 0; i < 8; i++) {
-    for (let j = 0; j < 8; j++) {
-      if (state[i][j]) {
-        ctx.fillStyle = state[i][j].color === 'red' ? '#ff4136' : '#ffffff';
-        ctx.beginPath();
-        ctx.arc((j + 0.5) * squareSize, (i + 0.5) * squareSize, squareSize * 0.4, 0, 2 * Math.PI);
-        ctx.fill();
-        if (state[i][j].isKing) {
-          ctx.fillStyle = state[i][j].color === 'red' ? '#ffffff' : '#000000';
-          ctx.font = `${squareSize * 0.5}px Arial`;
-          ctx.fillText('♔', (j + 0.25) * squareSize, (i + 0.75) * squareSize);
+      function renderMinimaxTree(root) {
+        /* Função para renderizar a árvore minimax */
+        minimaxTree.innerHTML = '';
+        /* Limpando a árvore minimax */
+        const queue = [{
+          node: root,
+          element: minimaxTree,
+          depth: 0
+        }];
+        /* Criando uma fila para armazenar os nós da árvore minimax */
+        while (queue.length > 0) {
+          /* Iterando sobre a fila */
+          const {
+            node,
+            element: parentElement,
+            depth
+          } = queue.shift();
+          /* Selecionando o nó atual da fila */
+          const nodeElement = document.createElement('div');
+          /* Criando um elemento para o nó atual da fila */
+          nodeElement.className = 'node';
+          /* Adicionando a classe do nó ao elemento */
+          if (depth === 0 && node.move) {
+            nodeElement.classList.add('best-move');
+            /* Adicionando a classe do melhor movimento ao elemento */
+          }
+          nodeElement.textContent = `D${MAX_DEPTH - depth}, E: ${node.evaluation?.toFixed(2) || 'N/A'}`;
+          /* Adicionando o texto do nó ao elemento */
+          if (node.move) {
+            /* Verificando se há um movimento no nó */
+            nodeElement.textContent += `, M: (${node.move.join(',')})`;
+            /* Adicionando o movimento ao texto do nó */
+          }
+          parentElement.appendChild(nodeElement);
+          /* Adicionando o elemento ao nó pai */
+          if (depth < 2) {
+            /* Verificando se a profundidade atual é menor que dois */
+            for (const child of node.children) {
+              /* Iterando sobre os filhos do nó atual */
+              queue.push({
+                node: child,
+                element: nodeElement,
+                depth: depth + 1
+              });
+              /* Adicionando os filhos do nó atual à fila */
+            }
+          }
         }
       }
-    }
-  }
 
-  // Draw the move
-  if (decision.move) {
-    const [startRow, startCol, endRow, endCol] = decision.move;
-    ctx.strokeStyle = '#2ecc71';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo((startCol + 0.5) * squareSize, (startRow + 0.5) * squareSize);
-    ctx.lineTo((endCol + 0.5) * squareSize, (endRow + 0.5) * squareSize);
-    ctx.stroke();
+      function getAllPossibleMoves(state, player) {
+        /* Função para selecionar todos os movimentos possíveis da IA */
+        const moves = [];
+        /* Criando um array para armazenar os movimentos possíveis da IA */
+        for (let i = 0; i < 8; i++) {
+          /* Iterando sobre as linhas do tabuleiro */
+          for (let j = 0; j < 8; j++) {
+            /* Iterando sobre as colunas do tabuleiro */
+            if (state[i][j] && state[i][j].color === player) {
+              /* Verificando se há uma peça da IA no tabuleiro */
+              moves.push(...getPossibleMovesForPiece(state, i, j));
+              /* Adicionando os movimentos possíveis da peça da IA ao array */
+            }
+          }
+        }
+        return moves;
+        /* Retornando os movimentos possíveis da IA */
+      }
 
-    // Draw arrow
-    const angle = Math.atan2(endRow - startRow, endCol - startCol);
-    ctx.beginPath();
-    ctx.moveTo((endCol + 0.5) * squareSize, (endRow + 0.5) * squareSize);
-    ctx.lineTo((endCol + 0.5 - 0.15 * Math.cos(angle - Math.PI / 6)) * squareSize,
-               (endRow + 0.5 - 0.15 * Math.sin(angle - Math.PI / 6)) * squareSize);
-    ctx.lineTo((endCol + 0.5 - 0.15 * Math.cos(angle + Math.PI / 6)) * squareSize,
-               (endRow + 0.5 - 0.15 * Math.sin(angle + Math.PI / 6)) * squareSize);
-    ctx.closePath();
-    ctx.fillStyle = '#2ecc71';
-    ctx.fill();
-  }
-}
+      function getPossibleMovesForPiece(state, row, col) {
+        /* Função para selecionar os movimentos possíveis da peça da IA */
+        const moves = [];
+        /* Criando um array para armazenar os movimentos possíveis da peça da IA */
+        const piece = state[row][col];
+        /* Selecionando a peça da IA */
+        const directions = piece.isKing ? [-1, 1] : [piece.color === 'red' ? 1 : -1];
+        /* Selecionando as direções possíveis da peça da IA */
+        for (const dRow of directions) {
+          /* Iterando sobre as direções possíveis da peça da IA */
+          for (const dCol of [-1, 1]) {
+            /* Iterando sobre as colunas possíveis da peça da IA */
+            if (isValidMove(state, row, col, row + dRow, col + dCol)) {
+              /* Verificando se o movimento é válido */
+              moves.push([row, col, row + dRow, col + dCol]);
+              /* Adicionando o movimento ao array */
+            }
+            if (isValidJump(state, row, col, row + dRow, col + dCol, row + 2 * dRow, col + 2 * dCol)) {
+              /* Verificando se o pulo é válido */
+              moves.push([row, col, row + 2 * dRow, col + 2 * dCol]);
+              /* Adicionando o pulo ao array */
+            }
+          }
+        }
+        return moves;
+        /* Retornando os movimentos possíveis da peça da IA */
+      }
 
-function resetGame() {
-  board.innerHTML = '';
-  createBoard();
-  currentPlayer = 'white';
-  message.textContent = translations[currentLanguage].message;
-  const ctx = boardVisualizer.getContext('2d');
-  ctx.clearRect(0, 0, boardVisualizer.width, boardVisualizer.height);
-  minimaxTree.innerHTML = '';
-  aiEvaluation.textContent = '0';
-  aiDepth.textContent = '0';
-  aiNodes.textContent = '0';
-}
+      function isValidMove(state, startRow, startCol, endRow, endCol) {
+        /* Função para verificar se o movimento é válido */
+        return endRow >= 0 && endRow < 8 && endCol >= 0 && endCol < 8 && !state[endRow][endCol];
+        /* Verificando se o movimento está dentro das dimensões do tabuleiro e se o quadrado de destino está vazio */
+      }
 
-createBoard();
-updateTexts();
-</script>
+      function isValidJump(state, startRow, startCol, midRow, midCol, endRow, endCol) {
+        /* Função para verificar se o pulo é válido */
+        return isValidMove(state, startRow, startCol, endRow, endCol) && state[midRow][midCol] && state[midRow][midCol].color !== state[startRow][startCol].color;
+        /* Verificando se o pulo está dentro das dimensões do tabuleiro, se há uma peça adversária no quadrado de pulo e se a peça adversária é de cor diferente da peça da IA */
+      }
 
-</body></html>
+      function applyMove(state, move) {
+        /* Função para aplicar o movimento ao estado atual do tabuleiro */
+        const [startRow, startCol, endRow, endCol] = move;
+        /* Selecionando o movimento */
+        const newState = JSON.parse(JSON.stringify(state));
+        /* Criando uma cópia do estado atual do tabuleiro */
+        newState[endRow][endCol] = newState[startRow][startCol];
+        /* Movendo a peça da IA para o quadrado de destino */
+        newState[startRow][startCol] = null;
+        /* Removendo a peça da IA do quadrado de origem */
+        if (Math.abs(startRow - endRow) === 2) {
+          /* Verificando se o movimento é um pulo */
+          const midRow = (startRow + endRow) / 2;
+          /* Selecionando a linha do quadrado de pulo */
+          const midCol = (startCol + endCol) / 2;
+          /* Selecionando a coluna do quadrado de pulo */
+          newState[midRow][midCol] = null;
+          /* Removendo a peça adversária do quadrado de pulo */
+        }
+        if ((endRow === 0 && newState[endRow][endCol].color === 'white') || (endRow === 7 && newState[endRow][endCol].color === 'red')) {
+          /* Verificando se a peça da IA alcançou a última linha do tabuleiro */
+          newState[endRow][endCol].isKing = true;
+          /* Adicionando a classe de rei à peça da IA */
+        }
+        return newState;
+        /* Retornando o novo estado do tabuleiro */
+      }
+
+      function evaluateBoard(state) {
+        /* Função para avaliar o estado atual do tabuleiro */
+        let score = 0;
+        /* Criando uma variável para armazenar a avaliação do estado atual do tabuleiro */
+        for (let i = 0; i < 8; i++) {
+          /* Iterando sobre as linhas do tabuleiro */
+          for (let j = 0; j < 8; j++) {
+            /* Iterando sobre as colunas do tabuleiro */
+            if (state[i][j]) {
+              /* Verificando se há uma peça no tabuleiro */
+              const pieceValue = state[i][j].isKing ? 3 : 1;
+              /* Selecionando o valor da peça */
+              score += state[i][j].color === 'red' ? pieceValue : -pieceValue;
+              /* Adicionando o valor da peça à avaliação do estado atual do tabuleiro */
+              // Positional bonuses
+              if (state[i][j].color === 'red') {
+                score += 0.1 * i;
+                /* Adicionando um bônus de posição à avaliação do estado atual do tabuleiro */
+              } else {
+                score -= 0.1 * (7 - i);
+                /* Subtraindo um bônus de posição à avaliação do estado atual do tabuleiro */
+              }
+              // Center control bonus
+              if (j > 1 && j < 6) {
+                score += state[i][j].color === 'red' ? 0.05 : -0.05;
+                /* Adicionando um bônus de controle do centro à avaliação do estado atual do tabuleiro */
+              }
+            }
+          }
+        }
+        return score;
+        /* Retornando a avaliação do estado atual do tabuleiro */
+      }
+
+      function isGameOver(state) {
+        /* Função para verificar se o jogo acabou */
+        let redPieces = 0;
+        /* Criando uma variável para contar as peças vermelhas no tabuleiro */
+        let whitePieces = 0;
+        /* Criando uma variável para contar as peças brancas no tabuleiro */
+        for (let i = 0; i < 8; i++) {
+          /* Iterando sobre as linhas do tabuleiro */
+          for (let j = 0; j < 8; j++) {
+            /* Iterando sobre as colunas do tabuleiro */
+            if (state[i][j]) {
+              /* Verificando se há uma peça no tabuleiro */
+              if (state[i][j].color === 'red') redPieces++;
+              /* Contando as peças vermelhas no tabuleiro */
+              else whitePieces++;
+              /* Contando as peças brancas no tabuleiro */
+            }
+          }
+        }
+        return redPieces === 0 || whitePieces === 0;
+        /* Verificando se o jogo acabou */
+      }
+
+      function checkForWinner() {
+        /* Função para verificar se há um vencedor */
+        const whitePieces = document.querySelectorAll('.piece.white');
+        /* Selecionando as peças brancas no tabuleiro */
+        const redPieces = document.querySelectorAll('.piece.red');
+        /* Selecionando as peças vermelhas no tabuleiro */
+        if (whitePieces.length === 0) {
+          /* Verificando se não há peças brancas no tabuleiro */
+          message.textContent = translations[currentLanguage].aiWins;
+          /* Atualizando a mensagem de instruções para o jogador */
+          return true;
+          /* Retornando verdadeiro se a IA venceu */
+        } else if (redPieces.length === 0) {
+          /* Verificando se não há peças vermelhas no tabuleiro */
+          message.textContent = translations[currentLanguage].youWin;
+          /* Atualizando a mensagem de instruções para o jogador */
+          return true;
+          /* Retornando verdadeiro se o jogador venceu */
+        }
+        return false;
+        /* Retornando falso se não há um vencedor */
+      }
+
+      function visualizeDecision(decision) {
+        /* Função para visualizar a decisão da IA */
+        const ctx = boardVisualizer.getContext('2d');
+        /* Selecionando o contexto da visualização do tabuleiro da IA */
+        ctx.clearRect(0, 0, boardVisualizer.width, boardVisualizer.height);
+        /* Limpando a visualização do tabuleiro da IA */
+        // Draw the board
+        const squareSize = boardVisualizer.width / 8;
+        /* Selecionando o tamanho do quadrado do tabuleiro da IA */
+        for (let i = 0; i < 8; i++) {
+          /* Iterando sobre as linhas do tabuleiro da IA */
+          for (let j = 0; j < 8; j++) {
+            /* Iterando sobre as colunas do tabuleiro da IA */
+            ctx.fillStyle = (i + j) % 2 === 0 ? '#deb887' : '#8b4513';
+            /* Selecionando a cor do quadrado do tabuleiro da IA */
+            ctx.fillRect(j * squareSize, i * squareSize, squareSize, squareSize);
+            /* Desenhando o quadrado do tabuleiro da IA */
+          }
+        }
+        // Draw the pieces
+        const state = getBoardState();
+        /* Selecionando o estado atual do tabuleiro */
+        for (let i = 0; i < 8; i++) {
+          /* Iterando sobre as linhas do tabuleiro */
+          for (let j = 0; j < 8; j++) {
+            /* Iterando sobre as colunas do tabuleiro */
+            if (state[i][j]) {
+              /* Verificando se há uma peça no tabuleiro */
+              ctx.fillStyle = state[i][j].color === 'red' ? '#ff4136' : '#ffffff';
+              /* Selecionando a cor da peça */
+              ctx.beginPath();
+              /* Criando um caminho para a peça */
+              ctx.arc((j + 0.5) * squareSize, (i + 0.5) * squareSize, squareSize * 0.4, 0, 2 * Math.PI);
+              /* Desenhando a peça */
+              ctx.fill();
+              /* Preenchendo a peça */
+              if (state[i][j].isKing) {
+                /* Verificando se a peça é um rei */
+                ctx.fillStyle = state[i][j].color === 'red' ? '#ffffff' : '#000000';
+                /* Selecionando a cor do símbolo de rei */
+                ctx.font = `${squareSize * 0.5}px Arial`;
+                /* Selecionando a fonte do símbolo de rei */
+                ctx.fillText('♔', (j + 0.25) * squareSize, (i + 0.75) * squareSize);
+                /* Desenhando o símbolo de rei */
+              }
+            }
+          }
+        }
+        // Draw the move
+        if (decision.move) {
+          /* Verificando se há um movimento da IA */
+          const [startRow, startCol, endRow, endCol] = decision.move;
+          /* Selecionando o movimento da IA */
+          ctx.strokeStyle = '#2ecc71';
+          /* Selecionando a cor da linha do movimento da IA */
+          ctx.lineWidth = 3;
+          /* Selecionando a largura da linha do movimento da IA */
+          ctx.beginPath();
+          /* Criando um caminho para a linha do movimento da IA */
+          ctx.moveTo((startCol + 0.5) * squareSize, (startRow + 0.5) * squareSize);
+          /* Selecionando o ponto de partida da linha do movimento da IA */
+          ctx.lineTo((endCol + 0.5) * squareSize, (endRow + 0.5) * squareSize);
+          /* Selecionando o ponto de chegada da linha do movimento da IA */
+          ctx.stroke();
+          /* Desenhando a linha do movimento da IA */
+          // Draw arrow
+          const angle = Math.atan2(endRow - startRow, endCol - startCol);
+          /* Selecionando o ângulo da seta do movimento da IA */
+          ctx.beginPath();
+          /* Criando um caminho para a seta do movimento da IA */
+          ctx.moveTo((endCol + 0.5) * squareSize, (endRow + 0.5) * squareSize);
+          /* Selecionando o ponto de partida da seta do movimento da IA */
+          ctx.lineTo((endCol + 0.5 - 0.15 * Math.cos(angle - Math.PI / 6)) * squareSize,
+            (endRow + 0.5 - 0.15 * Math.sin(angle - Math.PI / 6)) * squareSize);
+          /* Selecionando o ponto de chegada da primeira linha da seta do movimento da IA */
+          ctx.lineTo((endCol + 0.5 - 0.15 * Math.cos(angle + Math.PI / 6)) * squareSize,
+            (endRow + 0.5 - 0.15 * Math.sin(angle + Math.PI / 6)) * squareSize);
+          /* Selecionando o ponto de chegada da segunda linha da seta do movimento da IA */
+          ctx.closePath();
+          /* Fechando o caminho da seta do movimento da IA */
+          ctx.fillStyle = '#2ecc71';
+          /* Selecionando a cor da seta do movimento da IA */
+          ctx.fill();
+          /* Preenchendo a seta do movimento da IA */
+        }
+      }
+
+      function resetGame() {
+        /* Função para reiniciar o jogo */
+        board.innerHTML = '';
+        /* Limpando o tabuleiro do jogo */
+        createBoard();
+        /* Criando o tabuleiro do jogo */
+        currentPlayer = 'white';
+        /* Atualizando o jogador atual */
+        message.textContent = translations[currentLanguage].message;
+        /* Atualizando a mensagem de instruções para o jogador */
+        const ctx = boardVisualizer.getContext('2d');
+        /* Selecionando o contexto da visualização do tabuleiro da IA */
+        ctx.clearRect(0, 0, boardVisualizer.width, boardVisualizer.height);
+        /* Limpando a visualização do tabuleiro da IA */
+        minimaxTree.innerHTML = '';
+        /* Limpando a árvore minimax */
+        aiEvaluation.textContent = '0';
+        /* Atualizando o valor da estatística da avaliação da IA */
+        aiDepth.textContent = '0';
+        /* Atualizando o valor da estatística da profundidade da IA */
+        aiNodes.textContent = '0';
+        /* Atualizando o valor da estatística dos nós avaliados da IA */
+      }
+      createBoard();
+      /* Criando o tabuleiro do jogo */
+      updateTexts();
+      /* Atualizando os textos do jogo */
+    </script>
+  </body>
+</html>
