@@ -1,0 +1,767 @@
+<html><head><base href="https://classicgames.checkers/play-vs-cpu"><title>Damas Clássico - Jogue contra IA Avançada - Um projeto por Daniel M demonstrando conceitos de Minimax com alpha-beta pruning e heuristica</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+
+  body {
+    font-family: 'Roboto', sans-serif;
+    background: #f0f4f8;
+    color: #333;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  h1, h2 {
+    text-align: center;
+    color: #2c3e50;
+  }
+
+  .game-area {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: nowrap;
+  }
+
+  .board-container {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+    flex: 0 0 auto;
+    position: sticky;
+    top: 20px;
+  }
+
+  .board {
+    width: 400px;
+    height: 400px;
+    background: #deb887;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    border: 2px solid #8b4513;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .square {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .black {
+    background: #8b4513;
+  }
+
+  .piece {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+
+  .piece:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .red {
+    background: linear-gradient(135deg, #ff4136, #85144b);
+  }
+
+  .white {
+    background: linear-gradient(135deg, #ffffff, #dddddd);
+  }
+
+  .king::after {
+    content: '♔';
+    font-size: 30px;
+    position: relative;
+    top: -5px;
+    color: #ffd700;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+
+  #controls {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
+
+  button {
+    font-size: 16px;
+    padding: 10px 20px;
+    margin: 0 10px;
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  button:hover {
+    background-color: #2980b9;
+  }
+
+  #message {
+    text-align: center;
+    font-size: 18px;
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #ecf0f1;
+    border-radius: 4px;
+  }
+
+  .ai-container {
+    flex: 0 0 400px;
+    margin-left: 40px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    position: sticky;
+    top: 20px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+  }
+
+  #board-visualizer {
+    width: 100%;
+    max-width: 400px;
+    height: auto;
+    margin-bottom: 20px;
+    border: 2px solid #3498db;
+    border-radius: 4px;
+  }
+
+  .ai-info {
+    background-color: #ecf0f1;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+
+  .ai-info h3 {
+    margin-top: 0;
+    color: #2c3e50;
+  }
+
+  .ai-stat {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .ai-stat-label {
+    font-weight: bold;
+  }
+
+  #minimax-tree {
+    width: 100%;
+    height: 300px;
+    overflow: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+  }
+
+  .node {
+    display: inline-block;
+    border: 1px solid #3498db;
+    border-radius: 4px;
+    margin: 2px;
+    padding: 4px 8px;
+    font-size: 12px;
+    background-color: #ecf0f1;
+  }
+
+  .best-move {
+    background-color: #2ecc71;
+    color: #fff;
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 40px;
+    padding: 20px;
+    background-color: #34495e;
+    color: #ecf0f1;
+  }
+
+  footer a {
+    color: #3498db;
+    text-decoration: none;
+  }
+
+  footer a:hover {
+    text-decoration: underline;
+  }
+
+  #language-switch {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+  }
+</style>
+</head>
+<body>
+<div id="language-switch">
+  <button onclick="switchLanguage('en')">EN</button>
+  <button onclick="switchLanguage('pt')">PT</button>
+</div>
+<div class="container">
+  <h1>Damas Clássico - Jogue contra IA Avançada - Um projeto por Daniel M demonstrando conceitos de Minimax com alpha-beta pruning e heuristica</h1>
+  
+  <div class="game-area">
+    <div class="board-container">
+      <div id="message">Sua vez! Clique em uma peça para selecioná-la, depois clique em um quadrado válido para mover.</div>
+      <div class="board" id="checkerboard">
+        <!-- O tabuleiro será gerado pelo JavaScript -->
+      </div>
+      <div id="controls">
+        <button onclick="resetGame()">Novo Jogo</button>
+        <button onclick="location.href='https://classicgames.checkers/how-to-play'">Como Jogar</button>
+        <button onclick="location.href='https://classicgames.checkers/'">Menu Principal</button>
+      </div>
+    </div>
+    
+    <div class="ai-container">
+      <h2>Visualização da Decisão da IA</h2>
+      <canvas id="board-visualizer" width="400" height="400"></canvas>
+      <div class="ai-info">
+        <h3>Estatísticas da IA</h3>
+        <div class="ai-stat">
+          <span class="ai-stat-label">Avaliação:</span>
+          <span id="ai-evaluation">0</span>
+        </div>
+        <div class="ai-stat">
+          <span class="ai-stat-label">Profundidade:</span>
+          <span id="ai-depth">0</span>
+        </div>
+        <div class="ai-stat">
+          <span class="ai-stat-label">Nós Avaliados:</span>
+          <span id="ai-nodes">0</span>
+        </div>
+      </div>
+      <h3>Árvore Minimax</h3>
+      <div id="minimax-tree"></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>Criado por Daniel M com ❤️</p>
+</footer>
+
+<script>
+const board = document.getElementById('checkerboard');
+const message = document.getElementById('message');
+const boardVisualizer = document.getElementById('board-visualizer');
+const minimaxTree = document.getElementById('minimax-tree');
+const aiEvaluation = document.getElementById('ai-evaluation');
+const aiDepth = document.getElementById('ai-depth');
+const aiNodes = document.getElementById('ai-nodes');
+let selectedPiece = null;
+let currentPlayer = 'white';
+const MAX_DEPTH = 4;
+let nodesEvaluated = 0;
+
+const translations = {
+  en: {
+    title: "Classic Checkers - Play vs Advanced AI - A project by Daniel M demonstrating Minimax concepts with alpha-beta pruning and heuristics",
+    message: "Your turn! Click on a piece to select it, then click on a valid square to move.",
+    newGame: "New Game",
+    howToPlay: "How to Play",
+    mainMenu: "Main Menu",
+    aiDecision: "AI Decision Visualization",
+    aiStats: "AI Stats",
+    evaluation: "Evaluation:",
+    depth: "Depth:",
+    nodesEvaluated: "Nodes Evaluated:",
+    minimaxTree: "Minimax Tree",
+    aiThinking: "AI is thinking...",
+    aiWins: "AI wins! Game over.",
+    youWin: "Congratulations! You win!",
+    aiCouldntMove: "AI couldn't move. Your turn!",
+    createdBy: "Created by Daniel M with ❤️"
+  },
+  pt: {
+    title: "Damas Clássico - Jogue contra IA Avançada - Um projeto por Daniel M demonstrando conceitos de Minimax com alpha-beta pruning e heuristica",
+    message: "Sua vez! Clique em uma peça para selecioná-la, depois clique em um quadrado válido para mover.",
+    newGame: "Novo Jogo",
+    howToPlay: "Como Jogar",
+    mainMenu: "Menu Principal",
+    aiDecision: "Visualização da Decisão da IA",
+    aiStats: "Estatísticas da IA",
+    evaluation: "Avaliação:",
+    depth: "Profundidade:",
+    nodesEvaluated: "Nós Avaliados:",
+    minimaxTree: "Árvore Minimax",
+    aiThinking: "A IA está pensando...",
+    aiWins: "A IA venceu! Fim de jogo.",
+    youWin: "Parabéns! Você venceu!",
+    aiCouldntMove: "A IA não pôde se mover. Sua vez!",
+    createdBy: "Criado por Daniel M com ❤️"
+  }
+};
+
+let currentLanguage = 'pt';
+
+function switchLanguage(lang) {
+  currentLanguage = lang;
+  updateTexts();
+}
+
+function updateTexts() {
+  const texts = translations[currentLanguage];
+  document.title = texts.title;
+  document.querySelector('h1').textContent = texts.title;
+  message.textContent = texts.message;
+  document.querySelectorAll('#controls button')[0].textContent = texts.newGame;
+  document.querySelectorAll('#controls button')[1].textContent = texts.howToPlay;
+  document.querySelectorAll('#controls button')[2].textContent = texts.mainMenu;
+  document.querySelector('.ai-container h2').textContent = texts.aiDecision;
+  document.querySelector('.ai-info h3').textContent = texts.aiStats;
+  document.querySelectorAll('.ai-stat-label')[0].textContent = texts.evaluation;
+  document.querySelectorAll('.ai-stat-label')[1].textContent = texts.depth;
+  document.querySelectorAll('.ai-stat-label')[2].textContent = texts.nodesEvaluated;
+  document.querySelector('.ai-container h3:last-of-type').textContent = texts.minimaxTree;
+  document.querySelector('footer p').textContent = texts.createdBy;
+}
+
+function createBoard() {
+  for (let i = 0; i < 8; i++) {
+    for (let j = 0; j < 8; j++) {
+      const square = document.createElement('div');
+      square.className = 'square' + ((i + j) % 2 ? ' black' : '');
+      square.dataset.row = i;
+      square.dataset.col = j;
+      square.addEventListener('click', handleSquareClick);
+      board.appendChild(square);
+
+      if ((i + j) % 2 && (i < 3 || i > 4)) {
+        const piece = document.createElement('div');
+        piece.className = 'piece ' + (i < 3 ? 'red' : 'white');
+        piece.dataset.row = i;
+        piece.dataset.col = j;
+        square.appendChild(piece);
+      }
+    }
+  }
+}
+
+function handleSquareClick(e) {
+  const square = e.target.classList.contains('square') ? e.target : e.target.parentElement;
+  const piece = square.firstChild;
+
+  if (selectedPiece) {
+    const moves = getValidMoves(selectedPiece);
+    if (moves.includes(square)) {
+      movePiece(selectedPiece, square);
+      selectedPiece.classList.remove('selected');
+      selectedPiece = null;
+      currentPlayer = 'red';
+      if (checkForWinner()) return;
+      message.textContent = translations[currentLanguage].aiThinking;
+      setTimeout(makeAIMove, 500);
+    } else {
+      selectedPiece.classList.remove('selected');
+      selectedPiece = null;
+    }
+  } else if (piece && piece.classList.contains('white')) {
+    piece.classList.add('selected');
+    selectedPiece = piece;
+  }
+}
+
+function getValidMoves(piece) {
+  const row = parseInt(piece.dataset.row);
+  const col = parseInt(piece.dataset.col);
+  const isKing = piece.classList.contains('king');
+  const direction = piece.classList.contains('white') ? -1 : 1;
+  let moves = [];
+
+  function checkMove(r, c, jumpRow, jumpCol) {
+    const targetSquare = document.querySelector(`.square[data-row="${r}"][data-col="${c}"]`);
+    const jumpSquare = document.querySelector(`.square[data-row="${jumpRow}"][data-col="${jumpCol}"]`);
+    if (targetSquare && !targetSquare.firstChild) {
+      moves.push(targetSquare);
+    } else if (targetSquare && targetSquare.firstChild && 
+               targetSquare.firstChild.classList.contains(currentPlayer === 'white' ? 'red' : 'white') &&
+               jumpSquare && !jumpSquare.firstChild) {
+      moves.push(jumpSquare);
+    }
+  }
+
+  checkMove(row + direction, col - 1, row + 2 * direction, col - 2);
+  checkMove(row + direction, col + 1, row + 2 * direction, col + 2);
+
+  if (isKing) {
+    checkMove(row - direction, col - 1, row - 2 * direction, col - 2);
+    checkMove(row - direction, col + 1, row - 2 * direction, col + 2);
+  }
+
+  return moves;
+}
+
+function movePiece(piece, targetSquare) {
+  const startRow = parseInt(piece.dataset.row);
+  const startCol = parseInt(piece.dataset.col);
+  const endRow = parseInt(targetSquare.dataset.row);
+  const endCol = parseInt(targetSquare.dataset.col);
+
+  if (Math.abs(startRow - endRow) === 2) {
+    const jumpedRow = (startRow + endRow) / 2;
+    const jumpedCol = (startCol + endCol) / 2;
+    const jumpedSquare = document.querySelector(`.square[data-row="${jumpedRow}"][data-col="${jumpedCol}"]`);
+    if (jumpedSquare && jumpedSquare.firstChild) {
+      jumpedSquare.removeChild(jumpedSquare.firstChild);
+    }
+  }
+
+  targetSquare.appendChild(piece);
+  piece.dataset.row = endRow;
+  piece.dataset.col = endCol;
+
+  if ((currentPlayer === 'white' && endRow === 0) || (currentPlayer === 'red' && endRow === 7)) {
+    piece.classList.add('king');
+  }
+}
+
+function makeAIMove() {
+  nodesEvaluated = 0;
+  const gameState = getBoardState();
+  const bestMove = minimax(gameState, MAX_DEPTH, -Infinity, Infinity, true);
+  
+  if (bestMove.move) {
+    const [startRow, startCol, endRow, endCol] = bestMove.move;
+    const startSquare = document.querySelector(`.square[data-row="${startRow}"][data-col="${startCol}"]`);
+    const endSquare = document.querySelector(`.square[data-row="${endRow}"][data-col="${endCol}"]`);
+    const piece = startSquare.firstChild;
+    
+    movePiece(piece, endSquare);
+    currentPlayer = 'white';
+    message.textContent = translations[currentLanguage].message;
+    visualizeDecision(bestMove);
+    
+    aiEvaluation.textContent = bestMove.evaluation.toFixed(2);
+    aiDepth.textContent = MAX_DEPTH;
+    aiNodes.textContent = nodesEvaluated;
+    
+    if (checkForWinner()) return;
+  } else {
+    message.textContent = translations[currentLanguage].aiCouldntMove;
+  }
+}
+
+function getBoardState() {
+  const state = [];
+  for (let i = 0; i < 8; i++) {
+    state[i] = [];
+    for (let j = 0; j < 8; j++) {
+      const square = document.querySelector(`.square[data-row="${i}"][data-col="${j}"]`);
+      const piece = square.firstChild;
+      if (piece) {
+        state[i][j] = {
+          color: piece.classList.contains('red') ? 'red' : 'white',
+          isKing: piece.classList.contains('king')
+        };
+      } else {
+        state[i][j] = null;
+      }
+    }
+  }
+  return state;
+}
+
+function minimax(state, depth, alpha, beta, maximizingPlayer, parentNode = null) {
+  nodesEvaluated++;
+  if (depth === 0 || isGameOver(state)) {
+    const evaluation = evaluateBoard(state);
+    if (parentNode) {
+      const node = createNode(state, evaluation, null, depth);
+      parentNode.children.push(node);
+    }
+    return { evaluation, move: null };
+  }
+
+  let bestMove = null;
+  let bestEvaluation = maximizingPlayer ? -Infinity : Infinity;
+  const moves = getAllPossibleMoves(state, maximizingPlayer ? 'red' : 'white');
+  const currentNode = createNode(state, null, null, depth);
+
+  if (parentNode) {
+    parentNode.children.push(currentNode);
+  }
+
+  for (const move of moves) {
+    const newState = applyMove(state, move);
+    const result = minimax(newState, depth - 1, alpha, beta, !maximizingPlayer, currentNode);
+    const evaluation = result.evaluation;
+
+    if (maximizingPlayer) {
+      if (evaluation > bestEvaluation) {
+        bestEvaluation = evaluation;
+        bestMove = move;
+      }
+      alpha = Math.max(alpha, evaluation);
+    } else {
+      if (evaluation < bestEvaluation) {
+        bestEvaluation = evaluation;
+        bestMove = move;
+      }
+      beta = Math.min(beta, evaluation);
+    }
+
+    if (beta <= alpha) {
+      break;
+    }
+  }
+
+  currentNode.evaluation = bestEvaluation;
+  currentNode.move = bestMove;
+
+  if (depth === MAX_DEPTH) {
+    renderMinimaxTree(currentNode);
+  }
+
+  return { evaluation: bestEvaluation, move: bestMove };
+}
+
+function createNode(state, evaluation, move, depth) {
+  return {
+    state,
+    evaluation,
+    move,
+    depth,
+    children: []
+  };
+}
+
+function renderMinimaxTree(root) {
+  minimaxTree.innerHTML = '';
+  const queue = [{ node: root, element: minimaxTree, depth: 0 }];
+
+  while (queue.length > 0) {
+    const { node, element: parentElement, depth } = queue.shift();
+    const nodeElement = document.createElement('div');
+    nodeElement.className = 'node';
+    if (depth === 0 && node.move) {
+      nodeElement.classList.add('best-move');
+    }
+    nodeElement.textContent = `D${MAX_DEPTH - depth}, E: ${node.evaluation?.toFixed(2) || 'N/A'}`;
+    if (node.move) {
+      nodeElement.textContent += `, M: (${node.move.join(',')})`;
+    }
+    parentElement.appendChild(nodeElement);
+
+    if (depth < 2) { // Limit tree depth for better visualization
+      for (const child of node.children) {
+        queue.push({ node: child, element: nodeElement, depth: depth + 1 });
+      }
+    }
+  }
+}
+
+function getAllPossibleMoves(state, player) {
+  const moves = [];
+  for (let i = 0; i < 8; i++) {
+    for (let j = 0; j < 8; j++) {
+      if (state[i][j] && state[i][j].color === player) {
+        moves.push(...getPossibleMovesForPiece(state, i, j));
+      }
+    }
+  }
+  return moves;
+}
+
+function getPossibleMovesForPiece(state, row, col) {
+  const moves = [];
+  const piece = state[row][col];
+  const directions = piece.isKing ? [-1, 1] : [piece.color === 'red' ? 1 : -1];
+
+  for (const dRow of directions) {
+    for (const dCol of [-1, 1]) {
+      if (isValidMove(state, row, col, row + dRow, col + dCol)) {
+        moves.push([row, col, row + dRow, col + dCol]);
+      }
+      if (isValidJump(state, row, col, row + dRow, col + dCol, row + 2 * dRow, col + 2 * dCol)) {
+        moves.push([row, col, row + 2 * dRow, col + 2 * dCol]);
+      }
+    }
+  }
+
+  return moves;
+}
+
+function isValidMove(state, startRow, startCol, endRow, endCol) {
+  return endRow >= 0 && endRow < 8 && endCol >= 0 && endCol < 8 && !state[endRow][endCol];
+}
+
+function isValidJump(state, startRow, startCol, midRow, midCol, endRow, endCol) {
+  return isValidMove(state, startRow, startCol, endRow, endCol) &&
+         state[midRow][midCol] &&
+         state[midRow][midCol].color !== state[startRow][startCol].color;
+}
+
+function applyMove(state, move) {
+  const [startRow, startCol, endRow, endCol] = move;
+  const newState = JSON.parse(JSON.stringify(state));
+  newState[endRow][endCol] = newState[startRow][startCol];
+  newState[startRow][startCol] = null;
+
+  if (Math.abs(startRow - endRow) === 2) {
+    const midRow = (startRow + endRow) / 2;
+    const midCol = (startCol + endCol) / 2;
+    newState[midRow][midCol] = null;
+  }
+
+  if ((endRow === 0 && newState[endRow][endCol].color === 'white') ||
+      (endRow === 7 && newState[endRow][endCol].color === 'red')) {
+    newState[endRow][endCol].isKing = true;
+  }
+
+  return newState;
+}
+
+function evaluateBoard(state) {
+  let score = 0;
+  for (let i = 0; i < 8; i++) {
+    for (let j = 0; j < 8; j++) {
+      if (state[i][j]) {
+        const pieceValue = state[i][j].isKing ? 3 : 1;
+        score += state[i][j].color === 'red' ? pieceValue : -pieceValue;
+        
+        // Positional bonuses
+        if (state[i][j].color === 'red') {
+          score += 0.1 * i;  // Encourage advancement
+        } else {
+          score -= 0.1 * (7 - i);
+        }
+        
+        // Center control bonus
+        if (j > 1 && j < 6) {
+          score += state[i][j].color === 'red' ? 0.05 : -0.05;
+        }
+      }
+    }
+  }
+  return score;
+}
+
+function isGameOver(state) {
+  let redPieces = 0;
+  let whitePieces = 0;
+  for (let i = 0; i < 8; i++) {
+    for (let j = 0; j < 8; j++) {
+      if (state[i][j]) {
+        if (state[i][j].color === 'red') redPieces++;
+        else whitePieces++;
+      }
+    }
+  }
+  return redPieces === 0 || whitePieces === 0;
+}
+
+function checkForWinner() {
+  const whitePieces = document.querySelectorAll('.piece.white');
+  const redPieces = document.querySelectorAll('.piece.red');
+
+  if (whitePieces.length === 0) {
+    message.textContent = translations[currentLanguage].aiWins;
+    return true;
+  } else if (redPieces.length === 0) {
+    message.textContent = translations[currentLanguage].youWin;
+    return true;
+  }
+
+  return false;
+}
+
+function visualizeDecision(decision) {
+  const ctx = boardVisualizer.getContext('2d');
+  ctx.clearRect(0, 0, boardVisualizer.width, boardVisualizer.height);
+  
+  // Draw the board
+  const squareSize = boardVisualizer.width / 8;
+  for (let i = 0; i < 8; i++) {
+    for (let j = 0; j < 8; j++) {
+      ctx.fillStyle = (i + j) % 2 === 0 ? '#deb887' : '#8b4513';
+      ctx.fillRect(j * squareSize, i * squareSize, squareSize, squareSize);
+    }
+  }
+
+  // Draw the pieces
+  const state = getBoardState();
+  for (let i = 0; i < 8; i++) {
+    for (let j = 0; j < 8; j++) {
+      if (state[i][j]) {
+        ctx.fillStyle = state[i][j].color === 'red' ? '#ff4136' : '#ffffff';
+        ctx.beginPath();
+        ctx.arc((j + 0.5) * squareSize, (i + 0.5) * squareSize, squareSize * 0.4, 0, 2 * Math.PI);
+        ctx.fill();
+        if (state[i][j].isKing) {
+          ctx.fillStyle = state[i][j].color === 'red' ? '#ffffff' : '#000000';
+          ctx.font = `${squareSize * 0.5}px Arial`;
+          ctx.fillText('♔', (j + 0.25) * squareSize, (i + 0.75) * squareSize);
+        }
+      }
+    }
+  }
+
+  // Draw the move
+  if (decision.move) {
+    const [startRow, startCol, endRow, endCol] = decision.move;
+    ctx.strokeStyle = '#2ecc71';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo((startCol + 0.5) * squareSize, (startRow + 0.5) * squareSize);
+    ctx.lineTo((endCol + 0.5) * squareSize, (endRow + 0.5) * squareSize);
+    ctx.stroke();
+
+    // Draw arrow
+    const angle = Math.atan2(endRow - startRow, endCol - startCol);
+    ctx.beginPath();
+    ctx.moveTo((endCol + 0.5) * squareSize, (endRow + 0.5) * squareSize);
+    ctx.lineTo((endCol + 0.5 - 0.15 * Math.cos(angle - Math.PI / 6)) * squareSize,
+               (endRow + 0.5 - 0.15 * Math.sin(angle - Math.PI / 6)) * squareSize);
+    ctx.lineTo((endCol + 0.5 - 0.15 * Math.cos(angle + Math.PI / 6)) * squareSize,
+               (endRow + 0.5 - 0.15 * Math.sin(angle + Math.PI / 6)) * squareSize);
+    ctx.closePath();
+    ctx.fillStyle = '#2ecc71';
+    ctx.fill();
+  }
+}
+
+function resetGame() {
+  board.innerHTML = '';
+  createBoard();
+  currentPlayer = 'white';
+  message.textContent = translations[currentLanguage].message;
+  const ctx = boardVisualizer.getContext('2d');
+  ctx.clearRect(0, 0, boardVisualizer.width, boardVisualizer.height);
+  minimaxTree.innerHTML = '';
+  aiEvaluation.textContent = '0';
+  aiDepth.textContent = '0';
+  aiNodes.textContent = '0';
+}
+
+createBoard();
+updateTexts();
+</script>
+
+</body></html>
